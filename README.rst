@@ -5,25 +5,6 @@ README for Pylint - http://pylint.pycqa.org/
 .. image:: https://travis-ci.org/ZhimaoLin/pylint.svg?branch=master
     :target: https://travis-ci.org/ZhimaoLin/pylint
 
-.. image:: https://ci.appveyor.com/api/projects/status/rbvwhakyj1y09atb/branch/master?svg=true
-    :alt: AppVeyor Build Status
-    :target: https://ci.appveyor.com/project/PCManticore/pylint
-
-.. image:: https://coveralls.io/repos/github/PyCQA/pylint/badge.svg?branch=master
-    :target: https://coveralls.io/github/PyCQA/pylint?branch=master
-
-
-.. image:: https://img.shields.io/pypi/v/pylint.svg
-    :alt: Pypi Package version
-    :target: https://pypi.python.org/pypi/pylint
-
-.. image:: https://readthedocs.org/projects/pylint/badge/?version=latest
-    :target: http://pylint.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/ambv/black
-
 ======
 Pylint
 ======
