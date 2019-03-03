@@ -1,9 +1,5 @@
 
 README for Pylint - http://pylint.pycqa.org/
-<br>
-Our Badge: [
-![Build Status](https://travis-ci.org/ZhimaoLin/pylint.svg?branch=master)](https://travis-ci.org/ZhimaoLin/pylint)
-
 ============================================
 
 .. image:: https://travis-ci.org/PyCQA/pylint.svg?branch=master
