@@ -2253,7 +2253,7 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-is-called-multiple-times',
             'Program should call main function only once.'
         ),
-        'E0074': (
+        'C0074': (
             'User-defined function have more than 12 statement.',
             'user-defined-function-have-more-than-12-statement',
             'User-defined function should have less than 12 statement..'
@@ -2261,11 +2261,13 @@ class UaCmput174Checker(_BasicChecker):
     }
     options = (
         (
-            'ignore-ints',
+            "ua-max-statements",
             {
-                'default': False, 'type': 'yn', 'metavar' : '<y_or_n>',
-                'help': 'Allow returning non-unique integers',
-            }
+                "default": 12,
+                "type": "int",
+                "metavar": "<int>",
+                "help": "Maximum number of statements in function / method " "body.",
+            },
         ),
     )
 
@@ -2287,7 +2289,8 @@ class UaCmput174Checker(_BasicChecker):
             self.is_there_a_main_function = True
             if self.function_count != 1:
                 self.add_message('main-function-not-first', node=node)
-        if len(node.body)>12:
+
+        if len(node.body) > self.config.ua_max_statements:
             self.add_message('user-defined-function-have-more-than-12-statement', node=node)
 
 
@@ -2307,8 +2310,6 @@ class UaCmput174Checker(_BasicChecker):
         if node.func.name == 'main':
             self.main_function_called_count += 1
             self.main_function_is_called = True
-
-
 
             if self.main_function_called_count > 1:
                 self.add_message('main-function-is-called-multiple-times', node=node)
