@@ -2253,6 +2253,11 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-is-called-multiple-times',
             'Program should call main function only once.'
         ),
+        'E0074': (
+            'User-defined function have more than 12 statement.',
+            'user-defined-function-have-more-than-12-statement',
+            'User-defined function should have less than 12 statement..'
+        ),
     }
     options = (
         (
@@ -2280,14 +2285,10 @@ class UaCmput174Checker(_BasicChecker):
         self.function_count += 1
         if (not self.is_there_a_main_function) and node.name == 'main':
             self.is_there_a_main_function = True
-
-
-            # print(node.parent)
-
-
-
             if self.function_count != 1:
                 self.add_message('main-function-not-first', node=node)
+        if len(node.body)>12:
+            self.add_message('user-defined-function-have-more-than-12-statement', node=node)
 
 
 
@@ -2302,7 +2303,7 @@ class UaCmput174Checker(_BasicChecker):
 
     def visit_call(self, node):
 
-        print(node.func.name)
+        # print(node.func.name)
         if node.func.name == 'main':
             self.main_function_called_count += 1
             self.main_function_is_called = True
