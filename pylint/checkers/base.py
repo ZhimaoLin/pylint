@@ -54,6 +54,7 @@ from pylint.checkers import utils
 from pylint.reporters.ureports import nodes as reporter_nodes
 
 
+
 class NamingStyle:
     # It may seem counterintuitive that single naming style
     # has multiple "accepted" forms of regular expressions,
@@ -2223,6 +2224,97 @@ class ComparisonChecker(_BasicChecker):
         self.add_message("unidiomatic-typecheck", node=node)
 
 
+class UaCmput174Checker(_BasicChecker):
+
+
+    __implements__ = interfaces.IAstroidChecker
+
+
+    name = 'ua-cmput174'
+    priority = -1
+    msgs = {
+        'R0011': (
+            'No main function.',
+            'no-main-function',
+            'Program should include a user-defined parameterless function called main.'
+        ),
+        'C0012': (
+            'Main function is not the first one.',
+            'main-function-not-first',
+            'Main function should be the first function in the python file.'
+        ),
+    }
+    options = (
+        (
+            'ignore-ints',
+            {
+                'default': False, 'type': 'yn', 'metavar' : '<y_or_n>',
+                'help': 'Allow returning non-unique integers',
+            }
+        ),
+    )
+
+    def __init__(self, linter=None):
+        super(UaCmput174Checker, self).__init__(linter)
+        self.is_there_a_main_function = False
+        self.is_there_a_main_function_node = None
+        self.function_count = 0
+
+
+        self._function_stack = []
+
+    def visit_functiondef(self, node):
+        self.function_count += 1
+        if (not self.is_there_a_main_function) and node.name == 'main':
+            self.is_there_a_main_function = True
+
+
+            # print(node.parent)
+
+
+
+            if self.function_count != 1:
+                self.add_message('main-function-not-first', node=node)
+
+
+
+
+        # self._function_stack.append([])
+
+    def leave_functiondef(self, node):
+        # print('leave function def')
+        pass
+
+
+
+    def visit_call(self, node):
+        print(node)
+        # print('visit call')
+
+
+
+    def visit_return(self, node):
+        # print('visit return')
+        pass
+
+
+
+    def close(self):
+        if self.is_there_a_main_function == False:
+            self.add_message('no-main-function')
+
+
+
+
+
+
+
+
+
+
+
+
+
 def register(linter):
     """required method to auto register this checker"""
     linter.register_checker(BasicErrorChecker(linter))
@@ -2231,3 +2323,4 @@ def register(linter):
     linter.register_checker(DocStringChecker(linter))
     linter.register_checker(PassChecker(linter))
     linter.register_checker(ComparisonChecker(linter))
+    linter.register_checker(UaCmput174Checker(linter))
