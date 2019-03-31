@@ -1,4 +1,4 @@
-#1.1 Does the program include a user-defined parameterless function called main?
+#1.2 Is main the first function in the program file?
 def user_def_function():
     print("this is not main!")
 def main():

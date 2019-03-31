@@ -2243,6 +2243,16 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-not-first',
             'Main function should be the first function in the python file.'
         ),
+        'R0013': (
+            'Main function is not called.',
+            'main-function-is-not-called',
+            'Program should call main function.'
+        ),
+        'E0014': (
+            'Main function is called more than once.',
+            'main-function-is-called-multiple-times',
+            'Program should call main function only once.'
+        ),
     }
     options = (
         (
@@ -2259,6 +2269,9 @@ class UaCmput174Checker(_BasicChecker):
         self.is_there_a_main_function = False
         self.is_there_a_main_function_node = None
         self.function_count = 0
+
+        self.main_function_is_called = False
+        self.main_function_called_count = 0
 
 
         self._function_stack = []
@@ -2288,7 +2301,19 @@ class UaCmput174Checker(_BasicChecker):
 
 
     def visit_call(self, node):
-        print(node)
+
+        print(node.func.name)
+        if node.func.name == 'main':
+            self.main_function_called_count += 1
+            self.main_function_is_called = True
+
+
+
+            if self.main_function_called_count > 1:
+                self.add_message('main-function-is-called-multiple-times', node=node)
+
+
+
         # print('visit call')
 
 
@@ -2302,6 +2327,8 @@ class UaCmput174Checker(_BasicChecker):
     def close(self):
         if self.is_there_a_main_function == False:
             self.add_message('no-main-function')
+        if self.main_function_is_called == False:
+            self.add_message('main-function-is-not-called')
 
 
 
