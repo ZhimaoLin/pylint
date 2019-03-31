@@ -5,6 +5,24 @@ README for Pylint - http://pylint.pycqa.org/
 .. image:: https://travis-ci.org/ZhimaoLin/pylint.svg?branch=master
     :target: https://travis-ci.org/ZhimaoLin/pylint
 
+.. |tideliftlogo| image:: doc/media/Tidelift_Logos_RGB_Tidelift_Shorthand_On-White_small.png
+   :width: 75
+   :height: 60
+   :alt: Tidelift
+
+.. list-table::
+   :widths: 10 100
+
+   * - |tideliftlogo|
+     - Professional support for pylint is available as part of the `Tidelift
+       Subscription`_.  Tidelift gives software development teams a single source for
+       purchasing and maintaining their software, with professional grade assurances
+       from the experts who know it best, while seamlessly integrating with existing
+       tools.
+
+.. _Tidelift Subscription: https://tidelift.com/subscription/pkg/pypi-pylint?utm_source=pypi-pylint&utm_medium=referral&utm_campaign=readme
+
+
 ======
 Pylint
 ======
@@ -20,7 +38,8 @@ from within your code, as well as from an extensive configuration file.
 It is also possible to write your own plugins for adding your own checks or for
 extending pylint in one way or another.
 
-It's a free software distributed under the GNU General Public Licence.
+It's a free software distributed under the GNU General Public Licence unless
+otherwise specified.
 
 Development is hosted on GitHub: https://github.com/PyCQA/pylint/
 
@@ -45,7 +64,7 @@ If you want to install from a source distribution, extract the tarball and run
 the following command ::
 
     python setup.py install
-    
+
 
 Do make sure to do the same for astroid, which is used internally by pylint.
 
@@ -76,10 +95,20 @@ We use tox_ for running the test suite. You should be able to install it with::
 
 To run the test suite for a particular Python version, you can do::
 
-    tox -e py27
+    tox -e py37
 
 
 For more detailed information, check the documentation.
 
 .. _here: http://pylint.pycqa.org/en/latest/user_guide/installation.html
 .. _tox: https://tox.readthedocs.io/en/latest/
+
+License
+-------
+
+pylint is, with a few exceptions listed below, `GPLv2 <COPYING>`_.
+
+The icon files are licensed under the `CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0/>`_ license:
+
+- `doc/logo.png <doc/logo.png>`_
+- `doc/logo.svg <doc/logo.svg>`_

@@ -18,16 +18,17 @@
 """
 
 from __future__ import print_function
+
 import sys
 from collections import defaultdict
 from itertools import groupby
 
 import astroid
 
-from pylint.utils import decoding_stream
-from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker, table_lines_from_stats
+from pylint.interfaces import IRawChecker
 from pylint.reporters.ureports.nodes import Table
+from pylint.utils import decoding_stream
 
 
 class Similar:
@@ -108,7 +109,7 @@ class Similar:
             % (
                 nb_total_lignes,
                 nb_lignes_dupliquees,
-                nb_lignes_dupliquees * 100. / nb_total_lignes,
+                nb_lignes_dupliquees * 100.0 / nb_total_lignes,
             )
         )
 
@@ -175,7 +176,9 @@ def stripped_lines(lines, ignore_comments, ignore_docstrings, ignore_imports):
     for lineno, line in enumerate(lines, start=1):
         line = line.strip()
         if ignore_docstrings:
-            if not docstring and (line.startswith('"""') or line.startswith("'''")):
+            if not docstring and any(
+                line.startswith(i) for i in ['"""', "'''", 'r"""', "r'''"]
+            ):
                 docstring = line[:3]
                 line = line[3:]
             if docstring:
@@ -386,7 +389,7 @@ class SimilarChecker(BaseChecker, Similar):
             self.add_message("R0801", args=(len(couples), "\n".join(msg)))
             duplicated += num * (len(couples) - 1)
         stats["nb_duplicated_lines"] = duplicated
-        stats["percent_duplicated_lines"] = total and duplicated * 100. / total
+        stats["percent_duplicated_lines"] = total and duplicated * 100.0 / total
 
 
 def register(linter):

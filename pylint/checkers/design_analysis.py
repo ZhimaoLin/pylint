@@ -17,18 +17,16 @@
 
 """check for signs of poor design"""
 
-from collections import defaultdict
 import re
+from collections import defaultdict
 
 import astroid
-from astroid import If, BoolOp
-from astroid import decorators
+from astroid import BoolOp, If, decorators
 
-from pylint.interfaces import IAstroidChecker
+from pylint import utils
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import check_messages
-from pylint import utils
-
+from pylint.interfaces import IAstroidChecker
 
 MSGS = {
     "R0901": (
@@ -285,7 +283,8 @@ class MisdesignChecker(BaseChecker):
                 "default": 5,
                 "type": "int",
                 "metavar": "<num>",
-                "help": "Maximum number of boolean expressions in an if " "statement.",
+                "help": "Maximum number of boolean expressions in an if "
+                "statement (see R0916).",
             },
         ),
     )

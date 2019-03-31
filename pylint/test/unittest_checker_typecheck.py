@@ -16,9 +16,8 @@
 """Unittest for the type checker."""
 import sys
 
-import pytest
-
 import astroid
+import pytest
 
 from pylint.checkers import typecheck
 from pylint.testutils import CheckerTestCase, Message, set_config
@@ -51,7 +50,7 @@ class TestTypeChecker(CheckerTestCase):
         node = astroid.extract_node(
             """
         import optparse
-        optparse.THIS_does_not_EXIST 
+        optparse.THIS_does_not_EXIST
         """
         )
         with self.assertAddsMessages(

@@ -20,13 +20,13 @@
 
 # pylint: disable=W0511
 
+import re
 import tokenize
 
-import re
-
-from pylint.interfaces import IRawChecker, ITokenChecker
 from pylint.checkers import BaseChecker
-from pylint.utils import OPTION_RGX, MessagesHandlerMixIn
+from pylint.constants import OPTION_RGX
+from pylint.interfaces import IRawChecker, ITokenChecker
+from pylint.message import MessagesHandlerMixIn
 
 
 class ByIdManagedMessagesChecker(BaseChecker):

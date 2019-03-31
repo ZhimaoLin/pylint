@@ -40,22 +40,18 @@
 import builtins
 import collections
 import itertools
-import sys
 import re
+import sys
 from typing import Pattern
 
 import astroid
 import astroid.bases
 import astroid.scoped_nodes
 
-from pylint import checkers
-from pylint import exceptions
-from pylint import interfaces
-from pylint.checkers import utils
-from pylint import reporters
-from pylint.checkers.utils import get_node_last_lineno
-from pylint.reporters.ureports import nodes as reporter_nodes
 import pylint.utils as lint_utils
+from pylint import checkers, exceptions, interfaces
+from pylint.checkers import utils
+from pylint.reporters.ureports import nodes as reporter_nodes
 
 
 class NamingStyle:
@@ -353,7 +349,7 @@ def _has_abstract_methods(node):
     return len(utils.unimplemented_abstract_methods(node)) > 0
 
 
-def report_by_type_stats(sect, stats, old_stats):
+def report_by_type_stats(sect, stats, _):
     """make a report of
 
     * percentage of different types documented
@@ -382,16 +378,11 @@ def report_by_type_stats(sect, stats, old_stats):
     lines = ("type", "number", "old number", "difference", "%documented", "%badname")
     for node_type in ("module", "class", "method", "function"):
         new = stats[node_type]
-        old = old_stats.get(node_type, None)
-        if old is not None:
-            diff_str = reporters.diff_string(old, new)
-        else:
-            old, diff_str = "NC", "NC"
         lines += (
             node_type,
             str(new),
-            str(old),
-            diff_str,
+            "NC",
+            "NC",
             nice_stats[node_type].get("percent_documented", "0"),
             nice_stats[node_type].get("percent_badname", "0"),
         )
@@ -972,6 +963,12 @@ class BasicChecker(_BasicChecker):
             "uses a constant value for its test. This might not be what "
             "the user intended to do.",
         ),
+        "W0126": (
+            "Using a conditional statement with potentially wrong function or method call due to missing parentheses",
+            "missing-parentheses-for-call-in-test",
+            "Emitted when a conditional statement (If or ternary if) "
+            "seems to wrongly call a function due to missing parentheses",
+        ),
         "E0111": (
             "The first reversed() argument is not a sequence",
             "bad-reversed-sequence",
@@ -1002,15 +999,15 @@ class BasicChecker(_BasicChecker):
         self._tryfinallys = []
         self.stats = self.linter.add_stats(module=0, function=0, method=0, class_=0)
 
-    @utils.check_messages("using-constant-test")
+    @utils.check_messages("using-constant-test", "missing-parentheses-for-call-in-test")
     def visit_if(self, node):
         self._check_using_constant_test(node, node.test)
 
-    @utils.check_messages("using-constant-test")
+    @utils.check_messages("using-constant-test", "missing-parentheses-for-call-in-test")
     def visit_ifexp(self, node):
         self._check_using_constant_test(node, node.test)
 
-    @utils.check_messages("using-constant-test")
+    @utils.check_messages("using-constant-test", "missing-parentheses-for-call-in-test")
     def visit_comprehension(self, node):
         if node.ifs:
             for if_test in node.ifs:
@@ -1031,13 +1028,8 @@ class BasicChecker(_BasicChecker):
         structs = (astroid.Dict, astroid.Tuple, astroid.Set)
 
         # These nodes are excepted, since they are not constant
-        # values, requiring a computation to happen. The only type
-        # of node in this list which doesn't have this property is
-        # Attribute, which is excepted because the conditional statement
-        # can be used to verify that the attribute was set inside a class,
-        # which is definitely a valid use case.
+        # values, requiring a computation to happen.
         except_nodes = (
-            astroid.Attribute,
             astroid.Call,
             astroid.BinOp,
             astroid.BoolOp,
@@ -1049,7 +1041,26 @@ class BasicChecker(_BasicChecker):
         if not isinstance(test, except_nodes):
             inferred = utils.safe_infer(test)
 
-        if emit or isinstance(inferred, const_nodes):
+        if emit:
+            self.add_message("using-constant-test", node=node)
+        elif isinstance(inferred, const_nodes):
+            # If the constant node is a FunctionDef or Lambda then
+            #  it may be a illicit function call due to missing parentheses
+            call_inferred = None
+            if isinstance(inferred, astroid.FunctionDef):
+                call_inferred = inferred.infer_call_result()
+            elif isinstance(inferred, astroid.Lambda):
+                call_inferred = inferred.infer_call_result(node)
+            if call_inferred:
+                try:
+                    for inf_call in call_inferred:
+                        if inf_call != astroid.Uninferable:
+                            self.add_message(
+                                "missing-parentheses-for-call-in-test", node=node
+                            )
+                            break
+                except astroid.InferenceError:
+                    pass
             self.add_message("using-constant-test", node=node)
 
     def visit_module(self, _):
@@ -1941,7 +1952,7 @@ class DocStringChecker(_BasicChecker):
         if docstring is None:
             if not report_missing:
                 return
-            lines = get_node_last_lineno(node) - node.lineno
+            lines = utils.get_node_last_lineno(node) - node.lineno
 
             if node_type == "module" and not lines:
                 # If the module has no body, there's no reason

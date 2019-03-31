@@ -25,22 +25,21 @@ from __future__ import print_function
 import collections
 import contextlib
 import functools
-from glob import glob
-import os
-from os import linesep, getcwd, sep
-from os.path import abspath, basename, dirname, join, splitext
 import sys
 import tempfile
 import tokenize
-
+from glob import glob
 from io import StringIO
+from os import close, getcwd, linesep, remove, sep, write
+from os.path import abspath, basename, dirname, join, splitext
 
 import astroid
+
 from pylint import checkers
-from pylint.utils import PyLintASTWalker
-from pylint.reporters import BaseReporter
 from pylint.interfaces import IReporter
 from pylint.lint import PyLinter
+from pylint.reporters import BaseReporter
+from pylint.utils import ASTWalker
 
 # Utils
 
@@ -254,7 +253,7 @@ class CheckerTestCase:
 
     def walk(self, node):
         """recursive walk on the given node"""
-        walker = PyLintASTWalker(linter)
+        walker = ASTWalker(linter)
         walker.add_checker(self.checker)
         walker.walk(node)
 
@@ -286,14 +285,14 @@ def _create_tempfile(content=None):
     if content:
         if sys.version_info >= (3, 0):
             # erff
-            os.write(file_handle, bytes(content, "ascii"))
+            write(file_handle, bytes(content, "ascii"))
         else:
-            os.write(file_handle, content)
+            write(file_handle, content)
     try:
         yield tmp
     finally:
-        os.close(file_handle)
-        os.remove(tmp)
+        close(file_handle)
+        remove(tmp)
 
 
 @contextlib.contextmanager

@@ -47,35 +47,32 @@ import types
 from functools import singledispatch
 
 import astroid
-import astroid.context
 import astroid.arguments
+import astroid.context
 import astroid.nodes
-from astroid import exceptions, decorators
+from astroid import bases, decorators, exceptions, modutils, objects
 from astroid.interpreter import dunder_lookup
-from astroid import objects
-from astroid import bases
-from astroid import modutils
 
-from pylint.interfaces import IAstroidChecker, INFERENCE
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import (
-    is_super,
     check_messages,
-    decorated_with_property,
     decorated_with,
-    node_ignores_exception,
-    is_iterable,
-    is_mapping,
-    supports_membership_test,
-    is_comprehension,
-    is_inside_abstract_class,
-    supports_getitem,
-    supports_setitem,
-    supports_delitem,
-    safe_infer,
+    decorated_with_property,
     has_known_bases,
     is_builtin_object,
+    is_comprehension,
+    is_inside_abstract_class,
+    is_iterable,
+    is_mapping,
+    is_super,
+    node_ignores_exception,
+    safe_infer,
+    supports_delitem,
+    supports_getitem,
+    supports_membership_test,
+    supports_setitem,
 )
+from pylint.interfaces import INFERENCE, IAstroidChecker
 from pylint.utils import get_global_option
 
 BUILTINS = builtins.__name__
@@ -355,6 +352,11 @@ MSGS = {
         "unhashable-dict-key",
         "Emitted when a dict key is not hashable "
         "(i.e. doesn't define __hash__ method).",
+    ),
+    "E1141": (
+        "Unpacking a dictionary in iteration without calling .items()",
+        "dict-iter-missing-items",
+        "Emitted when trying to iterate through a dict without calling .items()",
     ),
     "W1113": (
         "Keyword argument before variable positional arguments list "
@@ -1524,6 +1526,29 @@ accessed. Python regular expressions are accepted.",
 
         if not supported_protocol(inferred):
             self.add_message(msg, args=node.value.as_string(), node=node.value)
+
+    @check_messages("dict-items-missing-iter")
+    def visit_for(self, node):
+        if not isinstance(node.target, astroid.node_classes.Tuple):
+            # target is not a tuple
+            return
+        if not len(node.target.elts) == 2:
+            # target is not a tuple of two elements
+            return
+
+        iterable = node.iter
+        if not isinstance(iterable, astroid.node_classes.Name):
+            # it's not a bare variable
+            return
+
+        inferred = safe_infer(iterable)
+        if not inferred:
+            return
+        if not isinstance(inferred, astroid.node_classes.Dict):
+            # the iterable is not a dict
+            return
+
+        self.add_message("dict-iter-missing-items", node=node)
 
 
 class IterableChecker(BaseChecker):

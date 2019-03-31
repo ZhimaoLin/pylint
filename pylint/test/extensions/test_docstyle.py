@@ -8,12 +8,11 @@
 """Tests for the pylint checker in :mod:`pylint.extensions.check_docstring
 """
 
-import os.path as osp
+from os.path import abspath, dirname, join
 
 import pytest
 
 from pylint.extensions.docstyle import DocStringStyleChecker
-
 
 EXPECTED_MSGS = [
     'First line empty in function docstring',
@@ -42,8 +41,7 @@ def checker(checker):
 
 
 def test_docstring_message(linter):
-    docstring_test = osp.join(osp.dirname(osp.abspath(__file__)), 'data',
-                              'docstring.py')
+    docstring_test = join(dirname(abspath(__file__)), 'data', 'docstring.py')
     linter.check([docstring_test])
     msgs = linter.reporter.messages
     assert len(msgs) == 7

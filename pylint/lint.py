@@ -46,15 +46,15 @@
 
 # pylint: disable=broad-except
 
-""" %prog [options] modules_or_packages
+""" pylint [options] modules_or_packages
 
   Check that module(s) satisfy a coding standard (and more !).
 
-    %prog --help
+    pylint --help
 
   Display this help message and exit.
 
-    %prog --help-msg <msg-id>[,<msg-id>]
+    pylint --help-msg <msg-id>[,<msg-id>]
 
   Display help messages about given message identifiers and exit.
 """
@@ -62,30 +62,29 @@ from __future__ import print_function
 
 import collections
 import contextlib
-from io import TextIOWrapper
 import operator
 import os
+import sys
+import tokenize
+import warnings
+from io import TextIOWrapper
+
+import astroid
+from astroid import modutils
+from astroid.__pkginfo__ import version as astroid_version
+from astroid.builder import AstroidBuilder
+
+from pylint import checkers, config, exceptions, interfaces, reporters
+from pylint.__pkginfo__ import version
+from pylint.constants import MSG_TYPES, OPTION_RGX
+from pylint.message import Message, MessagesHandlerMixIn, MessagesStore
+from pylint.reporters.ureports import nodes as report_nodes
+from pylint.utils import ASTWalker, FileState, utils
 
 try:
     import multiprocessing
 except ImportError:
     multiprocessing = None  # type: ignore
-import sys
-import tokenize
-import warnings
-
-import astroid
-from astroid.__pkginfo__ import version as astroid_version
-from astroid.builder import AstroidBuilder
-from astroid import modutils
-from pylint import checkers
-from pylint import interfaces
-from pylint import reporters
-from pylint import exceptions
-from pylint import utils
-from pylint import config
-from pylint.__pkginfo__ import version
-from pylint.reporters.ureports import nodes as report_nodes
 
 
 MANAGER = astroid.MANAGER
@@ -308,8 +307,8 @@ if multiprocessing is not None:
 # pylint: disable=too-many-instance-attributes
 class PyLinter(
     config.OptionsManagerMixIn,
-    utils.MessagesHandlerMixIn,
-    utils.ReportsHandlerMixIn,
+    MessagesHandlerMixIn,
+    reporters.ReportsHandlerMixIn,
     checkers.BaseTokenChecker,
 ):
     """lint Python modules using external checkers.
@@ -594,7 +593,7 @@ class PyLinter(
         # some stuff has to be done before ancestors initialization...
         #
         # messages store / checkers / reporter / astroid manager
-        self.msgs_store = utils.MessagesStore()
+        self.msgs_store = MessagesStore()
         self.reporter = None
         self._reporter_name = None
         self._reporters = {}
@@ -602,7 +601,7 @@ class PyLinter(
         self._pragma_lineno = {}
         self._ignore_file = False
         # visit variables
-        self.file_state = utils.FileState()
+        self.file_state = FileState()
         self.current_name = None
         self.current_file = None
         self.stats = None
@@ -615,13 +614,13 @@ class PyLinter(
             "disable-msg": self.disable,
             "enable-msg": self.enable,
         }
-        full_version = "%%prog %s\nastroid %s\nPython %s" % (
+        full_version = "pylint %s\nastroid %s\nPython %s" % (
             version,
             astroid_version,
             sys.version,
         )
-        utils.MessagesHandlerMixIn.__init__(self)
-        utils.ReportsHandlerMixIn.__init__(self)
+        MessagesHandlerMixIn.__init__(self)
+        reporters.ReportsHandlerMixIn.__init__(self)
         super(PyLinter, self).__init__(
             usage=__doc__, version=full_version, config_file=pylintrc or config.PYLINTRC
         )
@@ -836,7 +835,7 @@ class PyLinter(
         for (tok_type, content, start, _, _) in tokens:
             if tok_type != tokenize.COMMENT:
                 continue
-            match = utils.OPTION_RGX.search(content)
+            match = OPTION_RGX.search(content)
             if match is None:
                 continue
 
@@ -1049,7 +1048,7 @@ class PyLinter(
             (_, self.file_state.base_name, module, messages, stats, msg_status) = result
 
             for msg in messages:
-                msg = utils.Message(*msg)
+                msg = Message(*msg)
                 self.set_current_module(module)
                 self.reporter.handle_message(msg)
 
@@ -1065,7 +1064,7 @@ class PyLinter(
                 checker.stats = self.stats
 
     def _do_check(self, files_or_modules):
-        walker = utils.PyLintASTWalker(self)
+        walker = ASTWalker(self)
         _checkers = self.prepare_checkers()
         tokencheckers = [
             c
@@ -1102,7 +1101,7 @@ class PyLinter(
             ast_node = _ast_from_string(_read_stdin(), filepath, modname)
 
             if ast_node is not None:
-                self.file_state = utils.FileState(filepath)
+                self.file_state = FileState(filepath)
                 self.check_astroid_module(ast_node, walker, rawcheckers, tokencheckers)
                 # warn about spurious inline messages handling
                 spurious_messages = self.file_state.iter_spurious_suppression_messages(
@@ -1124,7 +1123,7 @@ class PyLinter(
                 # XXX to be correct we need to keep module_msgs_state for every
                 # analyzed module (the problem stands with localized messages which
                 # are only detected in the .close step)
-                self.file_state = utils.FileState(descr["basename"])
+                self.file_state = FileState(descr["basename"])
                 self._ignore_file = False
                 # fix the current file (if the source file was not available or
                 # if it's actually a c extension)
@@ -1167,7 +1166,7 @@ class PyLinter(
         self.current_file = filepath or modname
         self.stats["by_module"][modname] = {}
         self.stats["by_module"][modname]["statement"] = 0
-        for msg_cat in utils.MSG_TYPES.values():
+        for msg_cat in MSG_TYPES.values():
             self.stats["by_module"][modname][msg_cat] = 0
 
     def get_ast(self, filepath, modname):
@@ -1223,7 +1222,7 @@ class PyLinter(
         MANAGER.always_load_extensions = self.config.unsafe_load_any_extension
         MANAGER.max_inferable_values = self.config.limit_inference_results
         MANAGER.extension_package_whitelist.update(self.config.extension_pkg_whitelist)
-        for msg_cat in utils.MSG_TYPES.values():
+        for msg_cat in MSG_TYPES.values():
             self.stats[msg_cat] = 0
 
     def generate_reports(self):

@@ -1,13 +1,17 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: 18.6b4
+    rev: 19.3b0
     hooks:
     - id: black
       args: [--safe, --quiet]
       exclude: functional|input|test/extension|test/regrtest_data|test/data
       python_version: python3.6
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+    rev: v2.1.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.15
+    hooks:
+    -   id: isort

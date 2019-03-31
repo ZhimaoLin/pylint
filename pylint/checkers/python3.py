@@ -26,21 +26,20 @@
 """Check Python 2 code for Python 2/3 source-compatible issues."""
 from __future__ import absolute_import, print_function
 
-from collections import namedtuple
 import re
 import sys
 import tokenize
+from collections import namedtuple
 from typing import FrozenSet
 
 import astroid
 from astroid import bases
 
 from pylint import checkers, interfaces
-from pylint.checkers.utils import node_ignores_exception, find_try_except_wrapper_node
-from pylint.interfaces import INFERENCE_FAILURE, INFERENCE
-from pylint.utils import WarningScope
 from pylint.checkers import utils
-
+from pylint.checkers.utils import find_try_except_wrapper_node, node_ignores_exception
+from pylint.constants import WarningScope
+from pylint.interfaces import INFERENCE, INFERENCE_FAILURE
 
 _ZERO = re.compile("^0+$")
 
@@ -438,7 +437,7 @@ class Python3Checker(checkers.BaseChecker):
             "range built-in referenced when not iterating",
             "range-builtin-not-iterating",
             "Used when the range built-in is referenced in a non-iterating "
-            "context (returns an iterator in Python 3)",
+            "context (returns a range in Python 3)",
         ),
         "W1639": (
             "filter built-in referenced when not iterating",
@@ -1069,6 +1068,13 @@ class Python3Checker(checkers.BaseChecker):
     def visit_binop(self, node):
         if not self._future_division and node.op == "/":
             for arg in (node.left, node.right):
+                inferred = utils.safe_infer(arg)
+                # If we can infer the object and that object is not a numeric one, bail out.
+                if inferred and not (
+                    isinstance(inferred, astroid.Const)
+                    and isinstance(inferred.value, (int, float))
+                ):
+                    break
                 if isinstance(arg, astroid.Const) and isinstance(arg.value, float):
                     break
             else:

@@ -9,11 +9,9 @@
 """
 import os
 
-import pytest
-
 import astroid
-from astroid import nodes
-from astroid import bases
+import pytest
+from astroid import bases, nodes
 
 from pylint.pyreverse import inspector
 from unittest_pyreverse_writer import get_project
@@ -96,7 +94,7 @@ def test_interfaces():
     class AnotherIFace(Interface): pass
     class Concrete0(object):
         __implements__ = MyIFace
-    class Concrete1:                     
+    class Concrete1:
         __implements__ = (MyIFace, AnotherIFace)
     class Concrete2:
         __implements__ = (MyIFace, AnotherIFace)

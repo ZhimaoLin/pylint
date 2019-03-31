@@ -16,16 +16,15 @@
 """Unit tests for the pylint checkers in :mod:`pylint.extensions.check_docs`,
 in particular the parameter documentation checker `DocstringChecker`
 """
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import sys
 
+import astroid
 import pytest
 
-import astroid
-from pylint.testutils import CheckerTestCase, Message, set_config
-
 from pylint.extensions.docparams import DocstringParameterChecker
+from pylint.testutils import CheckerTestCase, Message, set_config
 
 
 class TestParamDocChecker(CheckerTestCase):
@@ -763,7 +762,7 @@ class TestParamDocChecker(CheckerTestCase):
             '''docstring foo
 
             :param y: bla
-            
+
             missing constructor parameter documentation
             '''
 
@@ -795,7 +794,7 @@ class TestParamDocChecker(CheckerTestCase):
 
             Args:
                 y: bla
-            
+
             missing constructor parameter documentation
             '''
 
@@ -829,7 +828,7 @@ class TestParamDocChecker(CheckerTestCase):
             ----------
             y:
                 bla
-            
+
             missing constructor parameter documentation
             '''
 

@@ -272,9 +272,24 @@ contributors:
 
 * Fantix King (UChicago): contributor
 
+* Yory (yory8): contributor
+
 * Thomas Hisch: contributor
 
 * Clément Pit-Claudel : contributor
 
 * Goudcode: contributor
+
+* Paul Renvoise : contributor
+
+* Bluesheeptoken: contributor
+
+* Michael Scott Cuthbert: contributor
+
+* Pierre Sassoulas : contributor
+    - Made C0412 (ungrouped import) compatible with isort
+
+* Nathan Marrow
+
+* Taewon Kim : contributor
 

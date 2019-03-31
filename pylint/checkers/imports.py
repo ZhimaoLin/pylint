@@ -23,6 +23,7 @@
 # Copyright (c) 2018 Mike Frysinger <vapier@gmail.com>
 # Copyright (c) 2018 Sushobhit <31987769+sushobhit27@users.noreply.github.com>
 # Copyright (c) 2018 Marianna Polatoglou <mpolatoglou@bloomberg.net>
+# Copyright (c) 2019 Paul Renvoise <renvoisepaul@gmail.com>
 
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
@@ -30,27 +31,25 @@
 """imports checkers for Python code"""
 
 import collections
-from distutils import sysconfig
+import copy
 import os
 import sys
-import copy
+from distutils import sysconfig
 
 import astroid
-from astroid import are_exclusive, decorators
-from astroid.modutils import get_module_part, is_standard_module
 import isort
 
-from pylint.interfaces import IAstroidChecker
-from pylint.utils import get_global_option
-from pylint.exceptions import EmptyReportError
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import (
     check_messages,
-    node_ignores_exception,
     is_from_fallback_block,
+    node_ignores_exception,
 )
-from pylint.graph import get_cycles, DotBackend
-from pylint.reporters.ureports.nodes import VerbatimText, Paragraph
+from pylint.exceptions import EmptyReportError
+from pylint.graph import DotBackend, get_cycles
+from pylint.interfaces import IAstroidChecker
+from pylint.reporters.ureports.nodes import Paragraph, VerbatimText
+from pylint.utils import get_global_option
 
 
 def _qualified_names(modname):
@@ -114,7 +113,7 @@ def _get_first_import(node, context, name, base, level, alias):
                         break
                 if found:
                     break
-    if found and not are_exclusive(first, node):
+    if found and not astroid.are_exclusive(first, node):
         return first
     return None
 
@@ -239,6 +238,11 @@ MSGS = {
         "import-self",
         "Used when a module is importing itself.",
     ),
+    "W0407": (
+        "Prefer importing %r instead of %r",
+        "preferred-module",
+        "Used when a module imported has a preferred replacement module.",
+    ),
     "W0410": (
         "__future__ import is not the first non docstring statement",
         "misplaced-future",
@@ -277,6 +281,7 @@ MSGS = {
 
 DEFAULT_STANDARD_LIBRARY = ()
 DEFAULT_KNOWN_THIRD_PARTY = ("enchant",)
+DEFAULT_PREFERRED_MODULES = ()
 
 
 class ImportsChecker(BaseChecker):
@@ -285,6 +290,7 @@ class ImportsChecker(BaseChecker):
     * relative / wildcard imports
     * cyclic imports
     * uses of deprecated modules
+    * uses of modules instead of preferred modules
     """
 
     __implements__ = IAstroidChecker
@@ -297,6 +303,7 @@ class ImportsChecker(BaseChecker):
         deprecated_modules = ("optparse",)
     else:
         deprecated_modules = ("optparse", "tkinter.tix")
+
     options = (
         (
             "deprecated-modules",
@@ -305,6 +312,16 @@ class ImportsChecker(BaseChecker):
                 "type": "csv",
                 "metavar": "<modules>",
                 "help": "Deprecated modules which should not be used,"
+                " separated by a comma.",
+            },
+        ),
+        (
+            "preferred-modules",
+            {
+                "default": DEFAULT_PREFERRED_MODULES,
+                "type": "csv",
+                "metavar": "<module:preferred-module>",
+                "help": "Couples of modules and preferred modules,"
                 " separated by a comma.",
             },
         ),
@@ -431,6 +448,12 @@ class ImportsChecker(BaseChecker):
         self._module_pkg = {}  # mapping of modules to the pkg they belong in
         self._excluded_edges = collections.defaultdict(set)
         self._ignored_modules = get_global_option(self, "ignored-modules", default=[])
+        # Build a mapping {'module': 'preferred-module'}
+        self.preferred_modules = dict(
+            module.split(":")
+            for module in self.config.preferred_modules
+            if ":" in module
+        )
 
     def _import_graph_without_ignored_edges(self):
         filtered_graph = copy.deepcopy(self.import_graph)
@@ -459,6 +482,7 @@ class ImportsChecker(BaseChecker):
 
         for name in names:
             self._check_deprecated_module(node, name)
+            self._check_preferred_module(node, name)
             imported_module = self._get_imported_module(node, name)
             if isinstance(node.parent, astroid.Module):
                 # Allow imports nested
@@ -481,6 +505,7 @@ class ImportsChecker(BaseChecker):
         self._check_import_as_rename(node)
         self._check_misplaced_future(node)
         self._check_deprecated_module(node, basename)
+        self._check_preferred_module(node, basename)
         self._check_wildcard_imports(node, imported_module)
         self._check_same_line_imports(node)
         self._check_reimport(node, basename=basename, level=node.level)
@@ -506,14 +531,19 @@ class ImportsChecker(BaseChecker):
         # Check imports are grouped by category (standard, 3rd party, local)
         std_imports, ext_imports, loc_imports = self._check_imports_order(node)
 
-        # Check imports are grouped by package within a given category
-        met = set()
+        # Check that imports are grouped by package within a given category
+        met_import = set()  #  set for 'import x' style
+        met_from = set()  #  set for 'from x import y' style
         current_package = None
         for import_node, import_name in std_imports + ext_imports + loc_imports:
             if not self.linter.is_message_enabled(
                 "ungrouped-imports", import_node.fromlineno
             ):
                 continue
+            if isinstance(import_node, astroid.node_classes.ImportFrom):
+                met = met_from
+            else:
+                met = met_import
             package, _, _ = import_name.partition(".")
             if current_package and current_package != package and package in met:
                 self.add_message("ungrouped-imports", node=import_node, args=package)
@@ -789,14 +819,16 @@ class ImportsChecker(BaseChecker):
         base = os.path.splitext(os.path.basename(module_file))[0]
 
         try:
-            importedmodname = get_module_part(importedmodname, module_file)
+            importedmodname = astroid.modutils.get_module_part(
+                importedmodname, module_file
+            )
         except ImportError:
             pass
 
         if context_name == importedmodname:
             self.add_message("import-self", node=node)
 
-        elif not is_standard_module(importedmodname):
+        elif not astroid.modutils.is_standard_module(importedmodname):
             # if this is not a package __init__ module
             if base != "__init__" and context_name not in self._module_pkg:
                 # record the module's parent, or the module itself if this is
@@ -820,6 +852,15 @@ class ImportsChecker(BaseChecker):
         for mod_name in self.config.deprecated_modules:
             if mod_path == mod_name or mod_path.startswith(mod_name + "."):
                 self.add_message("deprecated-module", node=node, args=mod_path)
+
+    def _check_preferred_module(self, node, mod_path):
+        """check if the module has a preferred replacement"""
+        if mod_path in self.preferred_modules:
+            self.add_message(
+                "preferred-module",
+                node=node,
+                args=(self.preferred_modules[mod_path], mod_path),
+            )
 
     def _check_import_as_rename(self, node):
         names = node.names
@@ -897,14 +938,14 @@ class ImportsChecker(BaseChecker):
                     graph[importee].add(importer)
         return graph
 
-    @decorators.cached
+    @astroid.decorators.cached
     def _external_dependencies_info(self):
         """return cached external dependencies information or build and
         cache them
         """
         return self._filter_dependencies_graph(internal=False)
 
-    @decorators.cached
+    @astroid.decorators.cached
     def _internal_dependencies_info(self):
         """return cached internal dependencies information or build and
         cache them

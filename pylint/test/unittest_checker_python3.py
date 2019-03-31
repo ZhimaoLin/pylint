@@ -20,14 +20,12 @@ from __future__ import absolute_import
 import sys
 import textwrap
 
-import pytest
-
 import astroid
+import pytest
 
 from pylint import testutils
 from pylint.checkers import python3 as checker
-from pylint.interfaces import INFERENCE_FAILURE, INFERENCE
-
+from pylint.interfaces import INFERENCE, INFERENCE_FAILURE
 
 # Decorator for any tests that will fail under Python 3
 python2_only = pytest.mark.skipif(sys.version_info[0] > 2, reason="Python 2 only")
@@ -478,6 +476,24 @@ class TestPython3Checker(testutils.CheckerTestCase):
         right_node = astroid.extract_node(" 3 / 2.0  #@")
         with self.assertNoMessages():
             for node in (left_node, right_node):
+                self.checker.visit_binop(node)
+
+    def test_division_different_types(self):
+        nodes = astroid.extract_node(
+            """
+        class A:
+            pass
+        A / 2 #@
+        A() / 2 #@
+        "a" / "a" #@
+        class Path:
+            def __div__(self, other):
+                return 42
+        Path() / 24 #@
+        """
+        )
+        for node in nodes:
+            with self.assertNoMessages():
                 self.checker.visit_binop(node)
 
     def test_dict_iter_method(self):

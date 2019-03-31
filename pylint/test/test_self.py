@@ -20,24 +20,25 @@
 # Licensed under the GPL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 # For details: https://github.com/PyCQA/pylint/blob/master/COPYING
 
+import configparser
 import contextlib
 import json
-import re
-import sys
 import os
-from os.path import join, dirname, abspath
+import re
+import subprocess
+import sys
 import tempfile
 import textwrap
-import configparser
 from io import StringIO
+from os.path import abspath, dirname, join
 from unittest import mock
 
-from pylint.lint import Run
-from pylint.reporters import BaseReporter
-from pylint.reporters.text import *
-from pylint.reporters.json import JSONReporter
 import pytest
+
 from pylint import utils
+from pylint.lint import Run
+from pylint.reporters import BaseReporter, JSONReporter
+from pylint.reporters.text import *
 
 HERE = abspath(dirname(__file__))
 
@@ -645,3 +646,17 @@ class TestRunTC(object):
 
         finally:
             os.chdir(curdir)
+
+    def test_version(self):
+        def check(lines):
+            assert lines[0].startswith("pylint ")
+            assert lines[1].startswith("astroid ")
+            assert lines[2].startswith("Python ")
+
+        out = StringIO()
+        self._run_pylint(["--version"], out=out)
+        check(out.getvalue().splitlines())
+
+        result = subprocess.check_output([sys.executable, "-m", "pylint", "--version"])
+        result = result.decode("utf-8")
+        check(result.splitlines())
