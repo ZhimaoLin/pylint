@@ -2306,18 +2306,15 @@ class UaCmput174Checker(_BasicChecker):
 
     def visit_call(self, node):
 
-        # print(node.func.name)
-        if node.func.name == 'main':
+        if type(node.func) is astroid.node_classes.Attribute:
+            return
+
+        if node.func.name and node.func.name == 'main':
             self.main_function_called_count += 1
             self.main_function_is_called = True
 
             if self.main_function_called_count > 1:
                 self.add_message('main-function-is-called-multiple-times', node=node)
-
-
-
-        # print('visit call')
-
 
 
     def visit_return(self, node):
