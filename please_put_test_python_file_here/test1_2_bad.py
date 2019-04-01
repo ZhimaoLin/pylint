@@ -3,3 +3,5 @@ def user_def_function():
     print("this is not main!")
 def main():
     print("this is main!")
+
+main()

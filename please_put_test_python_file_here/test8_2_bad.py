@@ -1,4 +1,10 @@
 #7.3 Does each user-defined function have 5 or fewer arguments
+def main():
+    sun1 = Sun("sun1", 10, 100)
+    sun2 = Sun("sun2", 20, 400)
+    sun1.name = "bad name"
+    print(sun2.name, sun1.name)
+
 class Sun:
     # It may seem counterintuitive that single naming style
     def __init__(self, iname, irad, im):
@@ -15,9 +21,4 @@ class Sun:
         print(one, two, three, four, "good")
         return self.name
 
-def main():
-    sun1 = Sun("sun1", 10, 100)
-    sun2 = Sun("sun2", 20, 400)
-    sun1.name = "bad name"
-    print(sun2.name, sun1.name)
-    
+main()

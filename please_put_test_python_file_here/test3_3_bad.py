@@ -1,4 +1,7 @@
 #3.3 Does each class name use: CapitalizedWords?
+def main():
+    a_sun = sun()
+
 class sun:
     # It may seem counterintuitive that single naming style
     def __init__(self, iname, irad, im):
@@ -11,3 +14,5 @@ class sun:
         return self.name
     def get_name(self):
         return self.name
+
+main()
