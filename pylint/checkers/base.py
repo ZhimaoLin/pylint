@@ -2258,6 +2258,11 @@ class UaCmput174Checker(_BasicChecker):
             'duplicated-constants',
             'Please define a const'
         ),
+        'C0062': (
+            'Constant assignments are too far away from its parent.',
+            'constant-assignment-far',
+            'Please assign constants closed to its parent'
+        ),
         'C0071': (
             'Adjacent duplicate code.',
             'adjacent-duplicate-code',
@@ -2277,6 +2282,15 @@ class UaCmput174Checker(_BasicChecker):
                 "type": "int",
                 "metavar": "<int>",
                 "help": "Maximum number of statements in function / method " "body.",
+            }
+        ),
+        (
+            "ua-max-dist-const-assign-and-parent",
+            {
+                "default": 5,
+                "type": "int",
+                "metavar": "<int>",
+                "help": "Maximum distance between a constant assignment and its parent.",
             },
         ),
     )
@@ -2318,10 +2332,24 @@ class UaCmput174Checker(_BasicChecker):
 
     def visit_const(self, node):
         allowed_duplicate_constant = ['', 0, 1, 2, -1, 0.0]
-        if node.value in self.constant_list and (not node.value in allowed_duplicate_constant):
+
+        if node.value in allowed_duplicate_constant:
+            return
+
+        if node.value in self.constant_list:
             self.add_message('duplicated-constants', node=node)
         else:
             self.constant_list.append(node.value)
+
+
+
+
+    def visit_assign(self, node):
+        if not type(node.value) is astroid.node_classes.Const:
+            return
+
+        if node.lineno - node.parent.lineno > self.config.ua_max_dist_const_assign_and_parent:
+            self.add_message('constant-assignment-far', node=node)
 
 
 

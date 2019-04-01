@@ -5,11 +5,6 @@ def main():
     print1000()
 
 def print1000():
-    print(1000)
-    print(100)
-    print(190)
-    print(191)
-    print(192)
     apple = 10
     orange = 20
     banana = 30
