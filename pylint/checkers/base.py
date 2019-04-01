@@ -2253,7 +2253,7 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-is-called-multiple-times',
             'Program should call main function only once.'
         ),
-        'C0051': (
+        'C0071': (
             'Adjacent duplicate code.',
             'adjacent-duplicate-code',
             'The program has 2 adjacent lines with the same code'
