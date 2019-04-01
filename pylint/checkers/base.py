@@ -2253,6 +2253,11 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-is-called-multiple-times',
             'Program should call main function only once.'
         ),
+        'C0061': (
+            'Use a constant multiple times.',
+            'duplicated-constants',
+            'Please define a const'
+        ),
         'C0071': (
             'Adjacent duplicate code.',
             'adjacent-duplicate-code',
@@ -2285,6 +2290,8 @@ class UaCmput174Checker(_BasicChecker):
         self.main_function_is_called = False
         self.main_function_called_count = 0
 
+        self.constant_list = []
+
 
         self._function_stack = []
 
@@ -2308,6 +2315,13 @@ class UaCmput174Checker(_BasicChecker):
     def leave_functiondef(self, node):
         # print('leave function def')
         pass
+
+    def visit_const(self, node):
+        allowed_duplicate_constant = ['', 0, 1, 2, -1, 0.0]
+        if node.value in self.constant_list and (not node.value in allowed_duplicate_constant):
+            self.add_message('duplicated-constants', node=node)
+        else:
+            self.constant_list.append(node.value)
 
 
 
