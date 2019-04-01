@@ -1,6 +1,6 @@
 #7.4 Does each user-defined function have 12 or fewer statements?
 def main():
-    many_arg_func()
+    few_arg_func()
 
 def few_arg_func():
     apple = 1

@@ -1,6 +1,6 @@
 #3.3 Does each class name use: CapitalizedWords?
 def main():
-    a_sun = sun()
+    pass
 
 class sun:
     # It may seem counterintuitive that single naming style
