@@ -2253,6 +2253,11 @@ class UaCmput174Checker(_BasicChecker):
             'main-function-is-called-multiple-times',
             'Program should call main function only once.'
         ),
+        'C0051': (
+            'Adjacent duplicate code.',
+            'adjacent-duplicate-code',
+            'The program has 2 adjacent lines with the same code'
+        ),
         'C0074': (
             'User-defined function have more than 12 statement.',
             'user-defined-function-have-more-than-12-statement',
@@ -2293,7 +2298,9 @@ class UaCmput174Checker(_BasicChecker):
         if len(node.body) > self.config.ua_max_statements:
             self.add_message('user-defined-function-have-more-than-12-statement', node=node)
 
-
+        for i in range(0, len(node.body)-1):
+            if node.body[i].as_string() == node.body[i+1].as_string():
+                self.add_message('adjacent-duplicate-code', node=node)
 
 
         # self._function_stack.append([])
