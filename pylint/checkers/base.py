@@ -2285,6 +2285,15 @@ class UaCmput174Checker(_BasicChecker):
             }
         ),
         (
+            "allowed_duplicate_constant",
+            {
+                "default": ("", 0, 0.0, 1, -1, 2),
+                "type": "csv",
+                "metavar": "<allowed duplicated constants>",
+                "help": "These constants are allowed to be duplicated",
+            },
+        ),
+        (
             "ua-max-dist-const-assign-and-parent",
             {
                 "default": 5,
@@ -2331,9 +2340,8 @@ class UaCmput174Checker(_BasicChecker):
         pass
 
     def visit_const(self, node):
-        allowed_duplicate_constant = ['', 0, 1, 2, -1, 0.0]
 
-        if node.value in allowed_duplicate_constant:
+        if node.value in self.config.allowed_duplicate_constant:
             return
 
         if node.value in self.constant_list:
