@@ -7,5 +7,19 @@ def f3():
     f1()
     f2()
 def main():
-    f1()
-    f3()
+    a = 3
+
+    if a > 2:
+        print()
+    else:
+        f1()
+    
+    for i in range(1, 10):
+        print(i)
+
+    while a > 2:
+        print(1)
+        a -= 1
+
+
+    # f3()
