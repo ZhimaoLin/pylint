@@ -7,7 +7,7 @@ class UaCmput174Checker(BaseChecker):
     __implements__ = IAstroidChecker
 
     name = 'ua-cmput174'
-    priority = -1
+    priority = -5
     msgs = {
         'R0011': (
             'No main function.',
