@@ -45,37 +45,49 @@ class CallGraph(BaseChecker):
             # elif type(f) is astroid.node_classes.For:
             #     self.function_dic[node.name].append(f)
 
-
-    def print_call_graph(self, dic, f_name, tab_count):
-        print(tab_count*"\t" + f_name + "()")
-        if f_name not in dic:
-            return
-        for f in dic[f_name]:
-            if type(f) is astroid.node_classes.Expr:
-                self.print_call_graph(dic, f.value.func.name, tab_count+1)
-            elif (type(f) is astroid.node_classes.For) or (type(f) is astroid.node_classes.While) :
-                self.print_loop(dic, f, tab_count+1)
-            elif type(f) is astroid.node_classes.Assign:
-                self.print_assign(f, tab_count+1)
-
     def print_assign(self, node, tab_count):
         for target in node.targets:
             print(tab_count*'\t' + target.as_string() + ' = ' + node.value.as_string())
 
-    def print_loop(self, dic, node, tab_count):
+    def print_loop(self, node, tab_count):
         if type(node) is astroid.node_classes.For:
             print(tab_count*"\t" + "for loop: ")
         else:
             print(tab_count*"\t" + "while loop: ")
-        for node_in_for in node.body:
-            if type(node_in_for) is astroid.node_classes.Expr:
-                self.print_call_graph(dic, node_in_for.value.func.name, tab_count+1)
-            elif (type(node_in_for) is astroid.node_classes.For) or (type(node_in_for) is astroid.node_classes.While):
-                self.print_loop(dic, node_in_for, tab_count+1)
+        for b in node.body:
+            # self.print_call_graph(self, f_name, tab_count)
+            if type(b) is astroid.node_classes.Expr:
+                self.print_call_graph(b.value.func.name, tab_count+1)
+            elif (type(b) is astroid.node_classes.For) or (type(b) is astroid.node_classes.While):
+                self.print_loop(b, tab_count+1)
+
+
+
+
+    def print_call_graph(self, f_name, tab_count):
+        print(tab_count*"\t" + f_name + "()")
+
+        # Deal with build in functions
+        if f_name not in self.function_dic:
+            return
+
+        for f in self.function_dic[f_name]:
+            if type(f) is astroid.node_classes.Assign:
+                self.print_assign(f, tab_count+1)
+            
+            elif (type(f) is astroid.node_classes.For) or (type(f) is astroid.node_classes.While) :
+                self.print_loop(f, tab_count+1)
+
+            # if type(f) is astroid.node_classes.Expr:
+            #     self.print_call_graph(f.value.func.name, tab_count+1)
+            
+
+    
             
     def close(self):
         if 'main' in self.function_dic:
-            self.print_call_graph(self.function_dic, "main", 0)
+            self.print_call_graph("main", 0)
+
 def register(linter):
     """required method to auto register this checker"""
     linter.register_checker(CallGraph(linter))
