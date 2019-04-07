@@ -9,31 +9,20 @@ class CallGraph(BaseChecker):
     __implements__ = IAstroidChecker
 
     name = 'call-graph'
-    priority = -6
+    priority = 0
     msgs = {
-        'C9999': (
-            'User-defined function have more than 12 statement.',
+        'R9999': (
+            'Call graph',
             'call-graph-message',
-            'User-defined function should have less than 12 statement..'
+            'Draw a call graph'
         ),
     }
-    options = (
-        (
-            "max-depth",
-            {
-                "default": 12,
-                "type": "int",
-                "metavar": "<int>",
-                "help": "Maximum number of statements in function / method " "body.",
-            }
-        ),
-    )
+    options = ()
 
     def __init__(self, linter=None):
         super(CallGraph, self).__init__(linter)
         self.function_dic = {}
-        
-
+   
     def visit_functiondef(self, node):
         self.function_dic[node.name] = []
         for f in node.body:
@@ -59,12 +48,6 @@ class CallGraph(BaseChecker):
         for b in node.body:
             self.print_call_graph(b, tab_count)
 
-
-            # self.print_call_graph(self, f_name, tab_count)
-            # if type(b) is astroid.node_classes.Expr:
-            #     self.print_call_graph(b.value.func.name, tab_count+1)
-            # elif (type(b) is astroid.node_classes.For) or (type(b) is astroid.node_classes.While):
-            #     self.print_loop(b, tab_count+1)
     def print_if(self, node, tab_count):
         print(tab_count*SPACE + 'if True')
         for b in node.body:
@@ -120,11 +103,13 @@ class CallGraph(BaseChecker):
                         self.print_call_graph(item, tab_count+1)
                 else:
                     print((tab_count+1)*SPACE + node.value.as_string())
-
         else:
             pass
             
     def close(self):
+        print('==============================')
+        print('|         Call Graph         |')
+        print('==============================')
         if 'main' in self.function_dic:
             print('main()')
             for item in self.function_dic['main']:
