@@ -43,6 +43,10 @@ def main():
                 function()
         try:
             try_in_if()
+            a = f1()
+            (a, b) = f1()
+            a += f1()
+            a, _ = f1()
         except:
             except_in_if()
         finally:
