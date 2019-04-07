@@ -3,6 +3,8 @@ import astroid
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 
+SPACE = '    '
+
 class CallGraph(BaseChecker):
     __implements__ = IAstroidChecker
 
@@ -38,55 +40,95 @@ class CallGraph(BaseChecker):
             # print(f.repr_tree())
             # print(type(f))
             self.function_dic[node.name].append(f)
-            # if type(f) is astroid.node_classes.Expr:
-            #     self.function_dic[node.name].append(f)
-            # elif type(f) is astroid.node_classes.While:
-            #     self.function_dic[node.name].append(f)
-            # elif type(f) is astroid.node_classes.For:
-            #     self.function_dic[node.name].append(f)
+
 
     def print_assign(self, node, tab_count):
         for target in node.targets:
-            print(tab_count*'\t' + target.as_string() + ' = ' + node.value.as_string())
+            if type(node.value) is astroid.node_classes.Call:
+                print(tab_count*SPACE + target.as_string() + ' = ' + node.value.as_string())
+
+    def print_aug_assign(self, node, tab_count):
+        if type(node.value) is astroid.node_classes.Call:
+            print(tab_count*SPACE + node.target.as_string() + ' ' + node.op + ' ' + node.value.as_string())
 
     def print_loop(self, node, tab_count):
         if type(node) is astroid.node_classes.For:
-            print(tab_count*"\t" + "for loop: ")
-        else:
-            print(tab_count*"\t" + "while loop: ")
+            print(tab_count*SPACE + "for loop: ")
+        elif type(node) is astroid.node_classes.While:
+            print(tab_count*SPACE + "while loop: ")
         for b in node.body:
+            self.print_call_graph(b, tab_count)
+
+
             # self.print_call_graph(self, f_name, tab_count)
-            if type(b) is astroid.node_classes.Expr:
-                self.print_call_graph(b.value.func.name, tab_count+1)
-            elif (type(b) is astroid.node_classes.For) or (type(b) is astroid.node_classes.While):
-                self.print_loop(b, tab_count+1)
+            # if type(b) is astroid.node_classes.Expr:
+            #     self.print_call_graph(b.value.func.name, tab_count+1)
+            # elif (type(b) is astroid.node_classes.For) or (type(b) is astroid.node_classes.While):
+            #     self.print_loop(b, tab_count+1)
+    def print_if(self, node, tab_count):
+        print(tab_count*SPACE + 'if True')
+        for b in node.body:
+            self.print_call_graph(b, tab_count)
 
+        print(tab_count*SPACE + 'else False')
+        for b in node.orelse:
+            self.print_call_graph(b, tab_count)
 
+    def print_try_except(self, node, tab_count):
+        print(tab_count*SPACE + 'try: ')
+        for b in node.body:
+            self.print_call_graph(b, tab_count)
 
-
-    def print_call_graph(self, f_name, tab_count):
-        print(tab_count*"\t" + f_name + "()")
-
-        # Deal with build in functions
-        if f_name not in self.function_dic:
-            return
-
-        for f in self.function_dic[f_name]:
-            if type(f) is astroid.node_classes.Assign:
-                self.print_assign(f, tab_count+1)
+        for handler in node.handlers:
+            if handler.type:
+                print(tab_count*SPACE + "except " + handler.type.name + ":")
+            else:
+                print(tab_count*SPACE + "except: ")
             
-            elif (type(f) is astroid.node_classes.For) or (type(f) is astroid.node_classes.While) :
-                self.print_loop(f, tab_count+1)
+            for b in handler.body:
+                self.print_call_graph(b, tab_count)
 
-            # if type(f) is astroid.node_classes.Expr:
-            #     self.print_call_graph(f.value.func.name, tab_count+1)
-            
+    def print_try_final(self, node, tab_count):
+        for b in node.body:
+            self.print_call_graph(b, tab_count-1)
+        
+        for f in node.finalbody:
+            print(tab_count*SPACE + "finally: ")
+            self.print_call_graph(f, tab_count)
 
-    
+    # Only this function handles tab_count logic
+    def print_call_graph(self, node, tab_count):
+        if type(node) is astroid.node_classes.Assign:
+            self.print_assign(node, tab_count+1)
+        elif type(node) is astroid.node_classes.AugAssign:
+            self.print_aug_assign(node, tab_count+1)
+        elif (type(node) is astroid.node_classes.For) or (type(node) is astroid.node_classes.While):
+            self.print_loop(node, tab_count+1)
+        elif type(node) is astroid.node_classes.If:
+            self.print_if(node, tab_count+1)
+        elif type(node) is astroid.node_classes.TryExcept:
+            self.print_try_except(node, tab_count+1)
+        elif type(node) is astroid.node_classes.TryFinally:
+            self.print_try_final(node, tab_count+1)
+        elif type(node) is astroid.node_classes.Expr:
+
+            if type(node.value) is astroid.node_classes.Call:
+
+                if node.value.func.name in self.function_dic:
+                    print((tab_count+1)*SPACE + node.value.func.name + "()")
+                    for item in self.function_dic[node.value.func.name]:
+                        self.print_call_graph(item, tab_count+1)
+                else:
+                    print((tab_count+1)*SPACE + node.value.as_string())
+
+        else:
+            pass
             
     def close(self):
         if 'main' in self.function_dic:
-            self.print_call_graph("main", 0)
+            print('main()')
+            for item in self.function_dic['main']:
+                self.print_call_graph(item, 0)
 
 def register(linter):
     """required method to auto register this checker"""
