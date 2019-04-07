@@ -90,8 +90,6 @@ class UaCmput174Checker(BaseChecker):
         self.main_function_called_count = 0
 
         self.constant_list = []
-
-
         self._function_stack = []
 
     def visit_functiondef(self, node):
@@ -108,13 +106,6 @@ class UaCmput174Checker(BaseChecker):
             if node.body[i].as_string() == node.body[i+1].as_string():
                 self.add_message('adjacent-duplicate-code', node=node)
 
-
-        # self._function_stack.append([])
-
-    def leave_functiondef(self, node):
-        # print('leave function def')
-        pass
-
     def visit_const(self, node):
         if node.value in self.config.allowed_duplicate_constant:
             return
@@ -123,17 +114,12 @@ class UaCmput174Checker(BaseChecker):
         else:
             self.constant_list.append(node.value)
 
-
-
-
     def visit_assign(self, node):
         if not type(node.value) is astroid.node_classes.Const:
             return
 
         if node.lineno - node.parent.lineno > self.config.ua_max_dist_const_assign_and_parent:
             self.add_message('constant-assignment-far', node=node)
-
-
 
     def visit_call(self, node):
 
@@ -146,13 +132,6 @@ class UaCmput174Checker(BaseChecker):
 
             if self.main_function_called_count > 1:
                 self.add_message('main-function-is-called-multiple-times', node=node)
-
-
-    def visit_return(self, node):
-        # print('visit return')
-        pass
-
-
 
     def close(self):
         if self.is_there_a_main_function == False:
