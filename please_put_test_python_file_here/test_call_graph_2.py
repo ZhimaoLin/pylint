@@ -9,17 +9,11 @@ def f3():
     f2()
 def main():
     a = 3
-
     b = 4
-
     a = b
-
     a = f1()
-
     a += f2()
-
     a, b = f1()
-
     f3()
 
     if a > 2:
@@ -35,7 +29,6 @@ def main():
             # a -= 1
             f1()
 
-    
     try:
         print()
     except:
