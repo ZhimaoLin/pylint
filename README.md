@@ -41,3 +41,9 @@ If you want to analyze all Python files in the `please_put_test_python_file_here
 If you want to analyze a specific Python file in the `please_put_test_python_file_here` folder
 #### Run
   > ```./run.sh <Python File Name>```
+
+# Contact Us
+If you have any questions or concerns, please email us:
+* Zhimao Lin <zhimao@ualberta.ca>
+* Yi Zhang <yi16@ualberta.ca>
+* Wang Dong <wdong2@ualberta.ca>
