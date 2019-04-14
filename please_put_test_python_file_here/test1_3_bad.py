@@ -1,4 +1,4 @@
-#1.3 Should call main()
+# 1.3 Main function is not called
 THREE = 3
 
 def main():

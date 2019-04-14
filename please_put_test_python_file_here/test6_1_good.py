@@ -1,13 +1,8 @@
-#6.1 Does every literal (other than 0, 1, 2, -1, 0.0 and '') appear exactly once?
+# 6.1 Functions have no more than 5 arguments 
 def main():
-    print(1000)
-    print('Hello world')
-    print(0)
-    print(0.0)
-    print(1)
-    print(2)
-    print(-1)
-    print('')
+    six_arg_func(1, 2, 3, 4, 5)
 
+def six_arg_func(one, two, three, four, five):
+    print(one, two, three, four, five)
 
 main()

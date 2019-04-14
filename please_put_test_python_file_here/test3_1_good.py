@@ -1,4 +1,4 @@
-#3.3 Does each class name use: CapitalizedWords?
+# 3.1 Class names follow the camel-case style
 def main():
     pass
 

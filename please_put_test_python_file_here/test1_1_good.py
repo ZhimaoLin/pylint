@@ -1,4 +1,4 @@
-#1.1 Does the program include a user-defined parameterless function called main?
+# 1.1 There is main function
 def main():
     print("this is main!")
 

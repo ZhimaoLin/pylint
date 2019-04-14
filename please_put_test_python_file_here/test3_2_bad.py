@@ -1,4 +1,4 @@
-#3.2 lower_case_with_underscores? (snake-case)
+# 3.2 Other names do not follow the snake-case style
 import random
 ONE = 1
 TWO = 2

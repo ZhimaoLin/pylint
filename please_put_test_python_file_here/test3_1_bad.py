@@ -1,8 +1,8 @@
-#7.3 Does each user-defined function have 5 or fewer arguments
+# 3.1 Class names do not follow the camel-case style
 def main():
     pass
 
-class Sun:
+class sun:
     # It may seem counterintuitive that single naming style
     def __init__(self, iname, irad, im):
         self.name = iname
@@ -13,9 +13,6 @@ class Sun:
     def __str__(self):
         return self.name
     def get_name(self):
-        return self.name
-    def six_arg_func(self, one, two, three, four, five):
-        print(one, two, three, four, five, "too many args :(")
         return self.name
 
 main()

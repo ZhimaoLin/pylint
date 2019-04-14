@@ -1,6 +1,12 @@
-#5.1 2 adjacent lines with duplicate code
+# 7.1 Methods have more than 5 arguments
 def main():
-    print("this is main!")
-    print("this is main!")
+    a_sun = Sun()
+
+class Sun():
+    def __init__(self): 
+        pass
+
+    def six_arg_func(self, one, two, three, four, five, six):
+        print(one, two, three, four, five, six, "too many args :(")
 
 main()

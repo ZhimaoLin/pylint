@@ -1,5 +1,4 @@
-#1.4 Should call main() only once
-
+# 1.4 Main function is called multiple times
 def main():
     print("this is main!")
 main()
